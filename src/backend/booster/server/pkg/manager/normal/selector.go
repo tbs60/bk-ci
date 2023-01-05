@@ -163,7 +163,7 @@ func (s *selector) pick(egn engine.Engine, tqg *engine.TaskQueueGroup, queueName
 		if err != engine.ErrorNoEnoughResources {
 			blog.Errorf("selector: launch task(%s) from engine(%s) queue(%s) failed: %v", tb.ID, egn.Name(), queueName, err)
 		}
-		blog.Errorf("selector: launch task(%s) from engine(%s) queue(%s) failed: %v", tb.ID, egn.Name(), queueName, err)
+		blog.Warnf("selector: launch task(%s) from engine(%s) queue(%s) failed: %v", tb.ID, egn.Name(), queueName, err)
 		return
 	}
 

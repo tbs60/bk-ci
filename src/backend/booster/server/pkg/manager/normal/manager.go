@@ -473,6 +473,11 @@ func (m *manager) releaseTask(param *mgr.TaskReleaseParam) error {
 		blog.Warnf("manager: release task(%s) already in terminated status", tb.ID)
 		return types.ErrorTaskAlreadyTerminated
 	}
+	// 客户端超时判断
+	if (tb.Status.Status == engine.TaskStatusStaging || tb.Status.Status == engine.TaskStatusStarting) &&
+		tb.Status.Message != messageTaskCanceledByClient {
+		blog.Errorf("manager: release task(%s) in status(%s) because of client timeout", tb.ID, tb.Status.Status)
+	}
 
 	blog.Infof("manager: release task(%s) with success=%t from status(%s)",
 		tb.ID, param.Success, tb.Status.Status)
