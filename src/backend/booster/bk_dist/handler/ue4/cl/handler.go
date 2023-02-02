@@ -475,8 +475,13 @@ func (cl *TaskCL) copyPumpHeadFile(workdir string) error {
 		return ErrorInvalidDependFile
 	}
 
+	for i := range includes {
+		includes[i] = strings.Replace(includes[i], "/", "\\", -1)
+	}
+	uniqlines := uniqArr(includes)
+
 	// TODO : save to cc.pumpHeadFile
-	newdata := strings.Join(includes, sep)
+	newdata := strings.Join(uniqlines, sep)
 	err = ioutil.WriteFile(cl.pumpHeadFile, []byte(newdata), os.ModePerm)
 	if err != nil {
 		blog.Warnf("cl: copy pump head failed to write file: %s with err:%v", cl.pumpHeadFile, err)
@@ -993,15 +998,15 @@ ERROREND:
 }
 
 func (cl *TaskCL) finalExecute([]string) {
+	if cl.needcopypumpheadfile {
+		go cl.copyPumpHeadFile(cl.sandbox.Dir)
+	}
+
 	if cl.saveTemp() {
 		return
 	}
 
-	if cl.needcopypumpheadfile {
-		cl.copyPumpHeadFile(cl.sandbox.Dir)
-	}
-
-	cl.cleanTmpFile()
+	go cl.cleanTmpFile()
 }
 
 func (cl *TaskCL) saveTemp() bool {

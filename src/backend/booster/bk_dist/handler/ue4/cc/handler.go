@@ -300,8 +300,18 @@ func (cc *TaskCC) copyPumpHeadFile(workdir string) error {
 
 	blog.Infof("cc: copy pump head got %d uniq include file from file: %s", len(includes), cc.sourcedependfile)
 
+	if len(includes) == 0 {
+		blog.Warnf("cl: depend file: %s data:[%s] is invalid", cc.sourcedependfile, string(data))
+		return ErrorInvalidDependFile
+	}
+
+	for i := range includes {
+		includes[i] = strings.Replace(includes[i], "\\", "/", -1)
+	}
+	uniqlines := uniqArr(includes)
+
 	// TODO : save to cc.pumpHeadFile
-	newdata := strings.Join(includes, sep)
+	newdata := strings.Join(uniqlines, sep)
 	err = ioutil.WriteFile(cc.pumpHeadFile, []byte(newdata), os.ModePerm)
 	if err != nil {
 		blog.Warnf("cc: copy pump head failed to write file: %s with err:%v", cc.pumpHeadFile, err)
@@ -767,15 +777,15 @@ ERROREND:
 }
 
 func (cc *TaskCC) finalExecute([]string) {
+	if cc.needcopypumpheadfile {
+		go cc.copyPumpHeadFile(cc.sandbox.Dir)
+	}
+
 	if cc.saveTemp() {
 		return
 	}
 
-	if cc.needcopypumpheadfile {
-		cc.copyPumpHeadFile(cc.sandbox.Dir)
-	}
-
-	cc.cleanTmpFile()
+	go cc.cleanTmpFile()
 }
 
 func (cc *TaskCC) saveTemp() bool {
